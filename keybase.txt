@@ -1,0 +1,76 @@
+==================================================================
+https://keybase.io/chrisbuchholz
+--------------------------------------------------------------------
+
+I hereby claim:
+
+  * I am an admin of http://chrisbuchholz.me
+  * I am chrisbuchholz (https://keybase.io/chrisbuchholz) on keybase.
+  * I have a public key with fingerprint 659D 0A76 0780 34D3 83EB  03E1 BEBF 7E8D 7EA0 1D78
+
+To claim this, I am signing this object:
+
+{
+    "body": {
+        "client": {
+            "name": "keybase.io node.js client",
+            "version": "0.6.0"
+        },
+        "key": {
+            "fingerprint": "659d0a76078034d383eb03e1bebf7e8d7ea01d78",
+            "host": "keybase.io",
+            "key_id": "BEBF7E8D7EA01D78",
+            "uid": "dfe580b89f1c9a6042adb3bbce6e7100",
+            "username": "chrisbuchholz"
+        },
+        "merkle_root": {
+            "ctime": 1411026567,
+            "hash": "d3200f2d82a5ba2a63f2d19c3d7efef4f021282b2c14e63c6836ef9803819e1f7fe21511220cf0605a7563f37b6b3ebd5e216e187479639367e1dc658962aa2c",
+            "seqno": 50998
+        },
+        "service": {
+            "hostname": "chrisbuchholz.me",
+            "protocol": "http:"
+        },
+        "type": "web_service_binding",
+        "version": 1
+    },
+    "ctime": 1411026603,
+    "expire_in": 157680000,
+    "prev": "447bec4da1894137b510f4084f61c5d4b21c9fb33e3fb108f7b26fccd72a963c",
+    "seqno": 4,
+    "tag": "signature"
+}
+
+with the aforementioned key, yielding the PGP signature:
+
+-----BEGIN PGP MESSAGE-----
+Version: GnuPG v1
+
+owFtkm1oHEUYx+9iTEh8IS9CUJNQV2g/mFxmZndnZk+ipDat2tZSiCm+wDmvd2su
+t9fdTWxyJKUJClYao4JGEAltlVRBS7T0S2kKviAGpS0UQlOtWrBUi/aDCrUFnQ0R
+WnA+zczzn//z/J5npu+4JVWfPr4wvm98tm1XevEST/XdM/VhxeKBHLGyFUsUfVWK
+k12JDSoraw2oEc4ilfGDNaVAqszz0ZpVTYc1rMLID0pGBTI4A6yxjkSePNZ+Ka/C
+cugnXhZ2PQkYwYBQYDvSprbiwFaQK66JopIoBqAk1FgWgii+Kau14pnzpbld37t+
+I+mlG0hvD4AbVvRDKwGplUsBp56GwmMYOIhJbnMuFFYEApAIIxWuIolC6Ed8SBQK
+QXE0KXpQhQNFlQuDYIVcxH6igw6EAGEXE1MWiwpJHhsBoJGkiLmcIYZtc4CesA2C
+VtrRAEFEEUcCOgrbAlMbK+0Zago9BTXRCkEXQoSA0AADlxHXeNiEY256Il0TxgpS
+4hAP256NiYJSYJd6GDGGhOGI1M5SYGVd4Hl0LDmGw75QSdlJ6/6PMGOuOqxyGMSB
+CIomWojjcjbhjkfKRxL5C4rnVo1y3C9JM7wbpwuN9OaeYGB3WGpX2Q9Vzk8ULsEU
+mJXkUcPG0nEIV8KRDFLPgQbQhUA7gDoaQ+FKhyMzKc1tW9maQ0A14QhrISRBzKDf
+QOqYOlneWEZ+vsTioVBZYy+nW6tT6fpUza1VyfdN1dc1/PenG6pq/+n5Zv/mgc8v
+1vyx+8/P5g9YB/vPuP2PLf7wxP3t7z+devjEu3uWsgt3PtKEd1/bcbI4ef7j5V+W
+p3Qlf+yTvm9rj3YeBW2HWrZ1Tz90dmLmzAMjT33wbHvnpbUnXtvz1tfvjDZXt/zU
+/FzVxOSLs7/d2/5kV+XN6+Pz3//6++zmy4UJp//8yY2Zw1/Oydsb7z695WJ747b8
+uprF9FL86uM7v7PaToGu7Wf3NSy98va56tZNkz9f+eL6TPPypnPW31Mz3pVK3aeN
+D179anBvj9O999Hbqq7Vzb0003m63HBh2rrrxwu1Ud18amFu69qmfNtHA0O5Z7qu
+3nfkjb9amuf16Kn3umteP5y73DS1w+ls7fsX
+=maJL
+-----END PGP MESSAGE-----
+
+And finally, I am proving ownership of this host by posting or
+appending to this document.
+
+View my publicly-auditable identity here: https://keybase.io/chrisbuchholz
+
+==================================================================
