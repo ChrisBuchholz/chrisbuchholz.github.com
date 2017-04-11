@@ -1,0 +1,16 @@
+image:
+  repository: registry.gitlab.com/chrisbuchholz/chrisbuchholz.me
+  pullPolicy: IfNotPresent
+  pullSecrets: gitlab-registry-secret
+
+service:
+  name: http
+  type: NodePort
+  externalPort: 80
+  internalPort: 80
+
+ingress:
+  tls: true
+  hosts:
+    - chrisbuchholz.me
+    - www.chrisbuchholz.me

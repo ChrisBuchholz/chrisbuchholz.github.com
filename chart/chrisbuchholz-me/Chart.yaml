@@ -1,0 +1,7 @@
+apiVersion: v1
+name: chrisbuchholz-me
+version: 0.1.0
+description: chrisbuchholz.me website
+maintainers:
+- name: chrisbuchholz
+  email: chris@chrisbuchholz.me
