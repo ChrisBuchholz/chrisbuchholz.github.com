@@ -1,0 +1,21 @@
+variables:
+  IMAGE_REPO: registry.gitlab.com/chrisbuchholz/chrisbuchholz.me
+  IMAGE_TAG: dev-$CI_COMMIT_REF_SLUG
+  DOCKER_DRIVER: overlay
+  CHART_DIR: chart
+
+stages:
+  - docker
+
+build:docker:
+  image: docker:latest
+  stage: docker
+  services: 
+  - docker:dind
+  script:
+  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+  - docker build -t $IMAGE_REPO:$IMAGE_TAG .
+  - docker push $IMAGE_REPO:$IMAGE_TAG
+  - docker inspect --format "{{ index .RepoDigests 0 }}" $IMAGE_TAG > imagesha.txt
+  artifacts:
+    paths: [imagesha.txt]
