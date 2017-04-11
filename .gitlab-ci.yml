@@ -8,8 +8,8 @@ stages:
   - docker
 
 build:docker:
-  only:
-  - dev
+  except:
+  - master
   image: docker:latest
   stage: docker
   services: 
