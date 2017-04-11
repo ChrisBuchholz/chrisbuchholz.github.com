@@ -1,6 +1,6 @@
 variables:
   IMAGE_REPO: registry.gitlab.com/chrisbuchholz/chrisbuchholz.me
-  IMAGE_TAG: $CI_COMMIT_REF_SLUG-$CI_COMMIT_SHA
+  IMAGE_TAG: $CI_COMMIT_REF_SLUG-${CI_COMMIT_SHA:0:8}
   DOCKER_DRIVER: overlay
   CHART_DIR: chart
 
@@ -8,6 +8,8 @@ stages:
   - docker
 
 build:docker:
+  only:
+  - dev
   image: docker:latest
   stage: docker
   services: 
