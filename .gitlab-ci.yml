@@ -5,15 +5,15 @@ variables:
   CHART_DIR: chart
 
 stages:
-  - docker
+  - build
 
-build:docker:
-  except:
-  - master
+docker:
+  stage: build
   image: docker:latest
-  stage: docker
   services: 
   - docker:dind
+  except:
+  - master
   script:
   - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
   - docker build -t $IMAGE_REPO:$IMAGE_TAG .
