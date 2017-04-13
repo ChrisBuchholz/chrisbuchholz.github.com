@@ -1,20 +1,114 @@
 variables:
-  IMAGE_REPO: registry.gitlab.com/chrisbuchholz/chrisbuchholz.me
-  IMAGE_TAG: $CI_COMMIT_REF_SLUG-${CI_COMMIT_SHA:0:8}
+  NAME: chrisbuchholz-me
+  DOMAIN: chrisbuchholz.me
+  DEPLOY_IMAGE: chrisbuchholz/gcloud-kubectl-helm
+  DOCKER_REGISTRY: registry.gitlab.com/chrisbuchholz/chrisbuchholz.me
   DOCKER_DRIVER: overlay
-  CHART_DIR: chart
+  CHART_DIR: chart/$NAME
+  GCLOUD_CLUSTER: schiaparelli
+  GCLOUD_ZONE: europe-west1-b
+  GCLOUD_PROJECT: schiaparelli-01
+  HASH: $CI_COMMIT_SHA
+
+.shared_hidden_key: &deploy_before_script
+  before_script:
+    - apk add --update git
+    - export HASH=$(git rev-parse --short=8 $CI_COMMIT_SHA)
+    - echo $K8S_CREDENTIALS | base64 -d > k8s_credentials
+    - gcloud auth activate-service-account --key-file k8s_credentials
+    - gcloud container clusters get-credentials $GCLOUD_CLUSTER --zone $GCLOUD_ZONE --project $GCLOUD_PROJECT 
+    - helm init --client-only
+    - kubectl cluster-info &> /dev/null # needed or else the access_token for the cluster is not created
+    - rm k8s_credentials
 
 stages:
   - build
+  - review
+  - staging
+  - production
 
 docker:
   stage: build
   image: docker:latest
   services: 
-  - docker:dind
-  except:
-  - master
+    - docker:dind
+  before_script:
+    - apk add --update git
+    - export HASH=$(git rev-parse --short=8 $CI_COMMIT_SHA)
   script:
-  - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
-  - docker build -t $IMAGE_REPO:$IMAGE_TAG .
-  - docker push $IMAGE_REPO:$IMAGE_TAG
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+    - docker build -t $DOCKER_REGISTRY:$CI_COMMIT_REF_SLUG-$HASH .
+    - docker push $DOCKER_REGISTRY:$CI_COMMIT_REF_SLUG-$HASH
+
+review:
+  stage: review
+  image: $DEPLOY_IMAGE
+  only:
+    - branches
+  except:
+    - master
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    url: http://review.$DOMAIN/$CI_COMMIT_REF_SLUG-$CI_COMMIT_SHA
+    on_stop: stop_review
+  <<: *deploy_before_script
+  script:
+    - helm upgrade -i $NAME-review-$CI_COMMIT_REF_SLUG-$HASH --set image.tag=$CI_COMMIT_REF_SLUG-$HASH,ingress.hosts="{review.$DOMAIN}",ingress.path=$CI_COMMIT_REF_SLUG-$HASH,ingress.basicAuth.secret=default-basic-auth,ingress.tlsSecretName=review-$NAME-tls,ingress.tls=false $CHART_DIR
+
+stop_review:
+  stage: review
+  image: $DEPLOY_IMAGE
+  when: manual
+  only:
+    - branches
+  except:
+    - master
+  variables:
+    GIT_STRATEGY: clone
+  environment:
+    name: review/$CI_COMMIT_REF_SLUG
+    action: stop
+  <<: *deploy_before_script
+  script:
+    - helm delete --purge $NAME-review-$CI_COMMIT_REF_SLUG-$HASH
+
+staging:
+  stage: staging
+  image: $DEPLOY_IMAGE
+  when: manual
+  only:
+    - master
+  environment:
+    name: staging
+    url: https://staging.$DOMAIN/$CI_COMMIT_SHA
+  <<: *deploy_before_script
+  script:
+    - helm upgrade -i $NAME-staging-$HASH --set image.tag=$CI_COMMIT_REF_SLUG-$HASH,ingress.hosts="{staging.$DOMAIN}",ingress.path=$HASH,ingress.basicAuth.secret=default-basic-auth,ingress.tlsSecretName=staging-$NAME-tls $CHART_DIR
+
+stop_staging:
+  stage: staging
+  image: $DEPLOY_IMAGE
+  when: manual
+  only:
+    - master
+  variables:
+    GIT_STRATEGY: clone
+  environment:
+    name: staging
+    action: stop
+  <<: *deploy_before_script
+  script:
+    - helm delete --purge $NAME-staging-$HASH
+
+production:
+  stage: production
+  image: $DEPLOY_IMAGE
+  when: manual
+  only:
+    - master
+  environment:
+    name: production
+    url: https://$DOMAIN/
+  <<: *deploy_before_script
+  script:
+    - helm upgrade -i $NAME --set image.tag=$CI_COMMIT_REF_SLUG-$HASH $CHART_DIR

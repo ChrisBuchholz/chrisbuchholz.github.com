@@ -5,11 +5,12 @@ image:
 
 service:
   name: http
-  type: NodePort
+  type: ClusterIP
   externalPort: 80
   internalPort: 80
 
 ingress:
+  class: nginx
   tls: true
   hosts:
     - chrisbuchholz.me
