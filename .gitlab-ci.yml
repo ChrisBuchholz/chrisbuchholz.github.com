@@ -56,6 +56,7 @@ build_tags:
     - export HASH=$(git rev-parse --short=8 $CI_COMMIT_SHA)
   script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+    - docker pull $DOCKER_REGISTRY:$HASH
     - docker tag $DOCKER_REGISTRY:$HASH $DOCKER_REGISTRY:$CI_COMMIT_TAG
     - docker tag $DOCKER_REGISTRY:$CI_COMMIT_TAG $DOCKER_REGISTRY:latest
     - docker push $DOCKER_REGISTRY:$CI_COMMIT_TAG
