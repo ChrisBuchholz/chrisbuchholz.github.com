@@ -9,7 +9,6 @@ variables:
   GCLOUD_ZONE: europe-west1-b
   GCLOUD_PROJECT: schiaparelli-01
   HASH: $CI_COMMIT_SHA
-  GIT_SUBMODULE_STRATEGY: recursive
 
 .shared_hidden_key: &deploy_before_script
   before_script:
@@ -33,12 +32,12 @@ dockerize branch:
   image: docker:latest
   only:
     - branches
+  variables:
+    GIT_SUBMODULE_STRATEGY: recursive
   services: 
     - docker:dind
   before_script:
     - apk add --update git
-    - git submodule sync --recursive
-    - git submodule update --init --recursive
     - export HASH=$(git rev-parse --short=8 $CI_COMMIT_SHA)
   script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
