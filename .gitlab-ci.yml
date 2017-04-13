@@ -16,10 +16,10 @@ variables:
     - export HASH=$(git rev-parse --short=8 $CI_COMMIT_SHA)
     - echo $K8S_CREDENTIALS | base64 -d > k8s_credentials
     - gcloud auth activate-service-account --key-file k8s_credentials
-    - gcloud container clusters get-credentials $GCLOUD_CLUSTER --zone $GCLOUD_ZONE --project $GCLOUD_PROJECT 
-    - helm init --client-only
-    - kubectl cluster-info &> /dev/null # needed or else the access_token for the cluster is not created
     - rm k8s_credentials
+    - gcloud container clusters get-credentials $GCLOUD_CLUSTER --zone $GCLOUD_ZONE --project $GCLOUD_PROJECT 
+    - kubectl cluster-info &> /dev/null # needed or else the access_token for the cluster is not created
+    - helm init --client-only
 
 stages:
   - build
