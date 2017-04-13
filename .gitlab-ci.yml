@@ -102,25 +102,9 @@ deploy staging:
   environment:
     name: staging
     url: https://staging.$DOMAIN/
-    on_stop: stop staging
   <<: *deploy_before_script
   script:
     - helm upgrade -i $NAME-staging --set image.tag=$HASH,ingress.hosts="{staging.$DOMAIN}",ingress.basicAuth.secret=default-basic-auth,ingress.tlsSecretName=staging-$NAME-tls $CHART_DIR
-
-stop staging:
-  stage: staging
-  image: $DEPLOY_IMAGE
-  when: manual
-  only:
-    - master
-  variables:
-    GIT_STRATEGY: none
-  environment:
-    name: staging
-    action: stop
-  <<: *deploy_before_script
-  script:
-    - helm delete --purge $NAME-staging-$HASH
 
 deploy production:
   stage: production
