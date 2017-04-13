@@ -27,7 +27,7 @@ stages:
   - staging
   - production
 
-build_branches:
+dockerize branch:
   stage: build
   image: docker:latest
   only:
@@ -44,7 +44,7 @@ build_branches:
     - docker push $DOCKER_REGISTRY:$HASH
     - docker push $DOCKER_REGISTRY:latest
 
-build_tags:
+docker tag:
   stage: build
   image: docker:latest
   only:
@@ -62,7 +62,7 @@ build_tags:
     - docker push $DOCKER_REGISTRY:$CI_COMMIT_TAG
     - docker push $DOCKER_REGISTRY:latest
 
-review:
+deploy review:
   stage: review
   image: $DEPLOY_IMAGE
   only:
@@ -72,12 +72,12 @@ review:
   environment:
     name: review/$CI_COMMIT_REF_SLUG
     url: http://review.$DOMAIN/$CI_COMMIT_SHA
-    on_stop: stop_review
+    on_stop: stop review
   <<: *deploy_before_script
   script:
     - helm upgrade -i $NAME-review-$HASH --set image.tag=$HASH,ingress.hosts="{review.$DOMAIN}",ingress.path=$HASH,ingress.basicAuth.secret=default-basic-auth,ingress.tlsSecretName=review-$NAME-tls,ingress.tls=false $CHART_DIR
 
-stop_review:
+stop review:
   stage: review
   image: $DEPLOY_IMAGE
   when: manual
@@ -94,20 +94,20 @@ stop_review:
   script:
     - helm delete --purge $NAME-review-$HASH
 
-staging:
+deploy staging:
   stage: staging
   image: $DEPLOY_IMAGE
   only:
     - master
   environment:
     name: staging
-    url: https://staging.$DOMAIN/$CI_COMMIT_SHA
-    on_stop: stop_staging
+    url: https://staging.$DOMAIN/
+    on_stop: stop staging
   <<: *deploy_before_script
   script:
-    - helm upgrade -i $NAME-staging-$HASH --set image.tag=$HASH,ingress.hosts="{staging.$DOMAIN}",ingress.path=$HASH,ingress.basicAuth.secret=default-basic-auth,ingress.tlsSecretName=staging-$NAME-tls $CHART_DIR
+    - helm upgrade -i $NAME-staging --set image.tag=$HASH,ingress.hosts="{staging.$DOMAIN}",ingress.basicAuth.secret=default-basic-auth,ingress.tlsSecretName=staging-$NAME-tls $CHART_DIR
 
-stop_staging:
+stop staging:
   stage: staging
   image: $DEPLOY_IMAGE
   when: manual
@@ -122,7 +122,7 @@ stop_staging:
   script:
     - helm delete --purge $NAME-staging-$HASH
 
-production:
+deploy production:
   stage: production
   image: $DEPLOY_IMAGE
   when: manual
