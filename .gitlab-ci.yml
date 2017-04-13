@@ -53,7 +53,7 @@ review:
     on_stop: stop_review
   <<: *deploy_before_script
   script:
-    - helm upgrade -i $NAME-review-$CI_COMMIT_REF_SLUG-$HASH --set image.tag=$CI_COMMIT_REF_SLUG-$HASH,ingress.hosts="{review.$DOMAIN}",ingress.path=$CI_COMMIT_REF_SLUG-$HASH,ingress.basicAuth.secret=default-basic-auth,ingress.tlsSecretName=review-$NAME-tls,ingress.tls=false $CHART_DIR
+    - helm upgrade -i $NAME-review-$CI_COMMIT_REF_SLUG-$HASH --set image.tag=$CI_COMMIT_REF_SLUG-$HASH,ingress.hosts="{review.$DOMAIN}",ingress.path=$CI_COMMIT_REF_SLUG-$HASH,ingress.basicAuth.secret=default-basic-auth,ingress.tlsSecretName=review-$NAME-tls $CHART_DIR
 
 stop_review:
   stage: review
@@ -64,7 +64,7 @@ stop_review:
   except:
     - master
   variables:
-    GIT_STRATEGY: clone
+    GIT_STRATEGY: none
   environment:
     name: review/$CI_COMMIT_REF_SLUG
     action: stop
@@ -92,7 +92,7 @@ stop_staging:
   only:
     - master
   variables:
-    GIT_STRATEGY: clone
+    GIT_STRATEGY: none
   environment:
     name: staging
     action: stop
