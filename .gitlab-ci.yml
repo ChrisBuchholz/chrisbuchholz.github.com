@@ -27,9 +27,11 @@ stages:
   - staging
   - production
 
-docker:
+build_review_staging:
   stage: build
   image: docker:latest
+  only:
+    - branches
   services: 
     - docker:dind
   before_script:
@@ -39,6 +41,18 @@ docker:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
     - docker build -t $DOCKER_REGISTRY:$CI_COMMIT_REF_SLUG-$HASH .
     - docker push $DOCKER_REGISTRY:$CI_COMMIT_REF_SLUG-$HASH
+
+build_production:
+  stage: build
+  image: docker:latest
+  only:
+    - tags
+  services: 
+    - docker:dind
+  script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+    - docker build -t $DOCKER_REGISTRY:CI_COMMIT_TAG .
+    - docker push $DOCKER_REGISTRY:CI_COMMIT_TAG
 
 review:
   stage: review
@@ -75,12 +89,12 @@ stop_review:
 staging:
   stage: staging
   image: $DEPLOY_IMAGE
-  when: manual
   only:
     - master
   environment:
     name: staging
     url: https://staging.$DOMAIN/$CI_COMMIT_SHA
+    on_stop: stop_staging
   <<: *deploy_before_script
   script:
     - helm upgrade -i $NAME-staging-$HASH --set image.tag=$CI_COMMIT_REF_SLUG-$HASH,ingress.hosts="{staging.$DOMAIN}",ingress.path=$HASH,ingress.basicAuth.secret=default-basic-auth,ingress.tlsSecretName=staging-$NAME-tls $CHART_DIR
@@ -105,10 +119,10 @@ production:
   image: $DEPLOY_IMAGE
   when: manual
   only:
-    - master
+    - tags
   environment:
     name: production
     url: https://$DOMAIN/
   <<: *deploy_before_script
   script:
-    - helm upgrade -i $NAME --set image.tag=$CI_COMMIT_REF_SLUG-$HASH $CHART_DIR
+    - helm upgrade -i $NAME --set image.tag=$CI_COMMIT_TAG $CHART_DIR
