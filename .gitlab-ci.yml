@@ -20,6 +20,8 @@ variables:
     - kubectl cluster-info &> /dev/null # needed or else the access_token for the cluster is not created
     - helm init --client-only
     - rm k8s_credentials
+    - git submodule sync --recursive
+    - git submodule update --init --recursive
 
 stages:
   - build
@@ -32,13 +34,13 @@ dockerize branch:
   image: docker:latest
   only:
     - branches
-  variables:
-    GIT_SUBMODULE_STRATEGY: recursive
   services: 
     - docker:dind
   before_script:
     - apk add --update git
     - export HASH=$(git rev-parse --short=8 $CI_COMMIT_SHA)
+    - git submodule sync --recursive
+    - git submodule update --init --recursive
   script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
     - docker build -t $DOCKER_REGISTRY:$HASH .
