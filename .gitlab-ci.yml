@@ -64,7 +64,7 @@ stop_review:
   except:
     - master
   variables:
-    GIT_STRATEGY: clone
+    GIT_STRATEGY: none
   environment:
     name: review/$CI_COMMIT_REF_SLUG
     action: stop
@@ -92,7 +92,7 @@ stop_staging:
   only:
     - master
   variables:
-    GIT_STRATEGY: clone
+    GIT_STRATEGY: none
   environment:
     name: staging
     action: stop
