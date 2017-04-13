@@ -1,0 +1,3 @@
+[submodule "chart/chrisbuchholz-me/templates"]
+	path = chart/chrisbuchholz-me/templates
+	url = https://github.com/ChrisBuchholz/common-chart-templates.git

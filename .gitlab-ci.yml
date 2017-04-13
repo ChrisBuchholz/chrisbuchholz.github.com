@@ -9,6 +9,7 @@ variables:
   GCLOUD_ZONE: europe-west1-b
   GCLOUD_PROJECT: schiaparelli-01
   HASH: $CI_COMMIT_SHA
+  GIT_SUBMODULE_STRATEGY: recursive
 
 .shared_hidden_key: &deploy_before_script
   before_script:
@@ -17,9 +18,9 @@ variables:
     - echo $K8S_CREDENTIALS | base64 -d > k8s_credentials
     - gcloud auth activate-service-account --key-file k8s_credentials
     - gcloud container clusters get-credentials $GCLOUD_CLUSTER --zone $GCLOUD_ZONE --project $GCLOUD_PROJECT 
-    - rm k8s_credentials
     - kubectl cluster-info &> /dev/null # needed or else the access_token for the cluster is not created
     - helm init --client-only
+    - rm k8s_credentials
 
 stages:
   - build
