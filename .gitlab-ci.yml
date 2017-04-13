@@ -36,7 +36,7 @@ dockerize branch:
   services: 
     - docker:dind
   before_script:
-    - apk add --update git
+    - apk add --update git openssl
     - export HASH=$(git rev-parse --short=8 $CI_COMMIT_SHA)
   script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
