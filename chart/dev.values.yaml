@@ -1,0 +1,13 @@
+replicaCount: 1
+
+image:
+  pullPolicy: Never
+  volume:
+    name: reload
+    containerPath: /var/www
+    hostPath: /Users/cb/Projects/chrisbuchholz.me/src
+
+ingress:
+  tls: false
+  hosts:
+    - chrisbuchholz.dev

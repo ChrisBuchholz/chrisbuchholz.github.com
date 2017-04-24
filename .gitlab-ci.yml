@@ -4,31 +4,36 @@ variables:
   DEPLOY_IMAGE: chrisbuchholz/gcloud-kubectl-helm
   DOCKER_REGISTRY: registry.gitlab.com/chrisbuchholz/chrisbuchholz.me
   DOCKER_DRIVER: overlay
-  CHART_DIR: chart/$NAME
+  CHART_DIR: chart
   GCLOUD_CLUSTER: schiaparelli
   GCLOUD_ZONE: europe-west1-b
   GCLOUD_PROJECT: schiaparelli-01
   NAMESPACE: chrisbuchholz-me
-  HASH: $CI_COMMIT_SHA
 
 .shared_hidden_key: &deploy_before_script
   before_script:
-    - apk add --update git
-    - export HASH=$(git rev-parse --short=8 $CI_COMMIT_SHA)
     - echo $K8S_CREDENTIALS | base64 -d > k8s_credentials
     - gcloud auth activate-service-account --key-file k8s_credentials
     - gcloud container clusters get-credentials $GCLOUD_CLUSTER --zone $GCLOUD_ZONE --project $GCLOUD_PROJECT 
     - kubectl cluster-info &> /dev/null # needed or else the access_token for the cluster is not created
     - helm init --client-only
     - rm k8s_credentials
-    - git submodule sync --recursive
-    - git submodule update --init --recursive
 
 stages:
+  - setup
   - build
   - review
   - staging
   - production
+
+setup:
+  stage: setup
+  image: bravissimolabs/alpine-git:latest
+  script:
+    - echo "export HASH=$(git rev-parse --short=8 $CI_COMMIT_SHA)" >> variables
+  artifacts:
+    paths:
+      - variables
 
 dockerize branch:
   stage: build
@@ -37,15 +42,14 @@ dockerize branch:
     - branches
   services: 
     - docker:dind
-  before_script:
-    - apk add --update git
-    - export HASH=$(git rev-parse --short=8 $CI_COMMIT_SHA)
-    - git submodule sync --recursive
-    - git submodule update --init --recursive
   script:
+    - source variables
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
-    - docker build -t $DOCKER_REGISTRY:$HASH .
-    - docker tag $DOCKER_REGISTRY:$HASH $DOCKER_REGISTRY:latest 
+    - docker pull $DOCKER_REGISTRY:latest
+    - docker build
+        --cache-from $DOCKER_REGISTRY:latest
+        -t $DOCKER_REGISTRY:$HASH
+        -t $DOCKER_REGISTRY:latest .
     - docker push $DOCKER_REGISTRY:$HASH
     - docker push $DOCKER_REGISTRY:latest
 
@@ -56,14 +60,12 @@ docker tag:
     - tags
   services: 
     - docker:dind
-  before_script:
-    - apk add --update git
-    - export HASH=$(git rev-parse --short=8 $CI_COMMIT_SHA)
   script:
+    - source variables
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
     - docker pull $DOCKER_REGISTRY:$HASH
     - docker tag $DOCKER_REGISTRY:$HASH $DOCKER_REGISTRY:$CI_COMMIT_TAG
-    - docker tag $DOCKER_REGISTRY:$CI_COMMIT_TAG $DOCKER_REGISTRY:latest
+    - docker tag $DOCKER_REGISTRY:$HASH $DOCKER_REGISTRY:latest
     - docker push $DOCKER_REGISTRY:$CI_COMMIT_TAG
     - docker push $DOCKER_REGISTRY:latest
 
@@ -76,11 +78,16 @@ deploy review:
     - master
   environment:
     name: review/$CI_COMMIT_REF_SLUG
-    url: http://review.$DOMAIN/$CI_COMMIT_SHA
+    url: http://$CI_COMMIT_REF_SLUG.review.$DOMAIN/
     on_stop: stop review
   <<: *deploy_before_script
   script:
-    - helm upgrade -i $NAME-review-$HASH --namespace $NAMESPACE --set image.tag=$HASH,ingress.hosts="{review.$DOMAIN}",ingress.path=$HASH,ingress.basicAuth.secret=default-basic-auth,ingress.tlsSecretName=review-$NAME-tls,ingress.tls=false $CHART_DIR
+    - source variables
+    - helm upgrade
+        -i $NAME-review-$CI_COMMIT_REF_SLUG
+        --namespace $NAMESPACE
+        --set image.tag=$HASH,ingress.hosts="{$CI_COMMIT_REF_SLUG.review.$DOMAIN}",ingress.basicAuth.secret=default-basic-auth,ingress.tls=false
+        $CHART_DIR
 
 stop review:
   stage: review
@@ -97,7 +104,8 @@ stop review:
     action: stop
   <<: *deploy_before_script
   script:
-    - helm delete --purge --namespace $NAMESPACE $NAME-review-$HASH
+    - source variables
+    - helm delete --purge $NAME-review-$CI_COMMIT_REF_SLUG
 
 deploy staging:
   stage: staging
@@ -109,7 +117,12 @@ deploy staging:
     url: https://staging.$DOMAIN/
   <<: *deploy_before_script
   script:
-    - helm upgrade -i $NAME-staging --namespace $NAMESPACE --set image.tag=$HASH,ingress.hosts="{staging.$DOMAIN}",ingress.basicAuth.secret=default-basic-auth,ingress.tlsSecretName=staging-$NAME-tls $CHART_DIR
+    - source variables
+    - helm upgrade
+        -i $NAME-staging
+        --namespace $NAMESPACE
+        --set image.tag=$HASH,ingress.hosts="{staging.$DOMAIN}",ingress.basicAuth.secret=default-basic-auth,ingress.tlsSecretName=staging-$NAME-tls
+        $CHART_DIR
 
 deploy production:
   stage: production
@@ -122,4 +135,5 @@ deploy production:
     url: https://$DOMAIN/
   <<: *deploy_before_script
   script:
+    - source variables
     - helm upgrade -i $NAME --namespace $NAMESPACE --set image.tag=$CI_COMMIT_TAG $CHART_DIR

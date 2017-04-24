@@ -1,0 +1,14 @@
+replicaCount: 2
+
+image:
+  tag: latest
+
+service:
+  port: 80
+  env:
+
+ingress:
+  tls: true
+  hosts:
+    - chrisbuchholz.me
+    - www.chrisbuchholz.me
