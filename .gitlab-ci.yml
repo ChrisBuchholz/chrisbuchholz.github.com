@@ -20,14 +20,16 @@ variables:
     - rm k8s_credentials
 
 stages:
-  - setup
+  - prepare
+  - test
   - build
-  - review
-  - staging
-  - production
+  - deploy
+  - destroy
 
-setup:
-  stage: setup
+########## prepare ##########
+
+create $CI_COMMIT_SHA hash:
+  stage: prepare
   image: bravissimolabs/alpine-git:latest
   script:
     - echo "export HASH=$(git rev-parse --short=8 $CI_COMMIT_SHA)" >> variables
@@ -35,7 +37,9 @@ setup:
     paths:
       - variables
 
-dockerize branch:
+########## build ##########
+
+branch:
   stage: build
   image: docker:latest
   only:
@@ -53,7 +57,7 @@ dockerize branch:
     - docker push $DOCKER_REGISTRY:$HASH
     - docker push $DOCKER_REGISTRY:latest
 
-docker tag:
+tag:
   stage: build
   image: docker:latest
   only:
@@ -69,8 +73,10 @@ docker tag:
     - docker push $DOCKER_REGISTRY:$CI_COMMIT_TAG
     - docker push $DOCKER_REGISTRY:latest
 
-deploy review:
-  stage: review
+########## deploy ##########
+
+review:
+  stage: deploy
   image: $DEPLOY_IMAGE
   only:
     - branches
@@ -89,8 +95,41 @@ deploy review:
         --set image.tag=$HASH,ingress.hosts="{$CI_COMMIT_REF_SLUG.review.$DOMAIN}",ingress.basicAuth.secret=default-basic-auth,ingress.tls=false
         $CHART_DIR
 
+staging:
+  stage: deploy
+  image: $DEPLOY_IMAGE
+  only:
+    - master
+  environment:
+    name: staging
+    url: https://staging.$DOMAIN/
+  <<: *deploy_before_script
+  script:
+    - source variables
+    - helm upgrade
+        -i $NAME-staging
+        --namespace $NAMESPACE
+        --set image.tag=$HASH,ingress.hosts="{staging.$DOMAIN}",ingress.basicAuth.secret=default-basic-auth,ingress.tlsSecretName=staging-$NAME-tls
+        $CHART_DIR
+
+production:
+  stage: deploy
+  image: $DEPLOY_IMAGE
+  when: manual
+  only:
+    - tags
+  environment:
+    name: production
+    url: https://$DOMAIN/
+  <<: *deploy_before_script
+  script:
+    - source variables
+    - helm upgrade -i $NAME --namespace $NAMESPACE --set image.tag=$CI_COMMIT_TAG $CHART_DIR
+
+########## destroy ##########
+
 stop review:
-  stage: review
+  stage: destroy
   image: $DEPLOY_IMAGE
   when: manual
   only:
@@ -107,33 +146,3 @@ stop review:
     - source variables
     - helm delete --purge $NAME-review-$CI_COMMIT_REF_SLUG
 
-deploy staging:
-  stage: staging
-  image: $DEPLOY_IMAGE
-  only:
-    - master
-  environment:
-    name: staging
-    url: https://staging.$DOMAIN/
-  <<: *deploy_before_script
-  script:
-    - source variables
-    - helm upgrade
-        -i $NAME-staging
-        --namespace $NAMESPACE
-        --set image.tag=$HASH,ingress.hosts="{staging.$DOMAIN}",ingress.basicAuth.secret=default-basic-auth,ingress.tlsSecretName=staging-$NAME-tls
-        $CHART_DIR
-
-deploy production:
-  stage: production
-  image: $DEPLOY_IMAGE
-  when: manual
-  only:
-    - tags
-  environment:
-    name: production
-    url: https://$DOMAIN/
-  <<: *deploy_before_script
-  script:
-    - source variables
-    - helm upgrade -i $NAME --namespace $NAMESPACE --set image.tag=$CI_COMMIT_TAG $CHART_DIR
